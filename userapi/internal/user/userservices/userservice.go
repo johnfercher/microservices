@@ -3,14 +3,18 @@ package userservices
 import (
 	"context"
 	"github.com/johnfercher/microservices/userapi/internal/domain/entity"
+	"github.com/johnfercher/microservices/userapi/internal/domain/repository"
 	"github.com/johnfercher/microservices/userapi/pkg/api/apierror"
 )
 
 type userService struct {
+	userRepository repository.UserRepository
 }
 
-func NewUserService() *userService {
-	return &userService{}
+func NewUserService(userRepository repository.UserRepository) *userService {
+	return &userService{
+		userRepository: userRepository,
+	}
 }
 
 func (self *userService) Create(ctx context.Context, user *entity.User) apierror.ApiError {
@@ -18,13 +22,10 @@ func (self *userService) Create(ctx context.Context, user *entity.User) apierror
 }
 
 func (self *userService) GetById(ctx context.Context, id string) (*entity.User, apierror.ApiError) {
-	return &entity.User{
-		Id:   "user_id",
-		Name: "user_name",
-		Address: &entity.Address{
-			Code: "address",
-		},
-		Login:    "login",
-		Password: "password",
-	}, nil
+	user, err := self.userRepository.GetById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }

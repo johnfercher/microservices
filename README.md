@@ -1,8 +1,12 @@
 # Microservices
 
-# Reference
+## Execute
+```
+$ docker-compose up
+```
 
-## Kafka
+## Reference
+### Kafka
 * [Apache Kafka — Aprendendo na prática][kafka_evandro]
 * [Kafka Base Examples][kafka_examples]
 
