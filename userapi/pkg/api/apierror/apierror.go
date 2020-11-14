@@ -13,7 +13,7 @@ type ApiError interface {
 	GetStatusCode() int
 	Error() string
 	WithMessage(message string) ApiError
-	WithFields(fields ...zap.Field) ApiError
+	AppendFields(fields ...zap.Field) ApiError
 }
 
 func New(ctx context.Context, errorCode string, statusCode int) ApiError {
@@ -46,7 +46,7 @@ func (self *apiError) WithMessage(message string) ApiError {
 	return self
 }
 
-func (self *apiError) WithFields(fields ...zap.Field) ApiError {
+func (self *apiError) AppendFields(fields ...zap.Field) ApiError {
 	self.fields = append(self.fields, fields...)
 	return self
 }

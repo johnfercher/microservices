@@ -1,15 +1,19 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"log"
-	"strings"
-
-	kafka "github.com/segmentio/kafka-go"
+	httptransport "github.com/go-kit/kit/transport/http"
+	"github.com/gorilla/mux"
+	"github.com/johnfercher/microservices/userapi/internal/infra"
+	"github.com/johnfercher/microservices/userapi/internal/user/userrepository"
+	"github.com/johnfercher/microservices/userapi/internal/user/userservice"
+	"github.com/johnfercher/microservices/userapi/internal/userhttp"
+	"github.com/johnfercher/microservices/userapi/pkg/api/apilog"
+	"github.com/johnfercher/microservices/userapi/pkg/api/apiscope"
+	"net/http"
 )
 
-func getKafkaReader(kafkaURL, topic, groupID string) *kafka.Reader {
+/*func getKafkaReader(kafkaURL, topic, groupID string) *kafka.Reader {
 	brokers := strings.Split(kafkaURL, ",")
 	return kafka.NewReader(kafka.ReaderConfig{
 		Brokers:  brokers,
@@ -20,13 +24,13 @@ func getKafkaReader(kafkaURL, topic, groupID string) *kafka.Reader {
 		StartOffset: kafka.LastOffset,
 	})
 }
-k
+
 func main() {
 	// get kafka reader using environment variables.
 	kafkaURL := "localhost:9092"
 	topic := "kafka-topic-test"
 	groupID := "group1"
-
+k
 	reader := getKafkaReader(kafkaURL, topic, groupID)
 
 	defer reader.Close()
@@ -39,68 +43,50 @@ func main() {
 		}
 		fmt.Printf("message at topic:%v partition:%v offset:%v	%s = %s\n", m.Topic, m.Partition, m.Offset, string(m.Key), string(m.Value))
 	}
-}
+}*/
 
-/*var logger = apilog.New()
+var logger = apilog.New()
 
 func main() {
+	// MySql
+	mysql, err := infra.GetMysqlConnection()
+	if err != nil {
+		panic(err)
+	}
+
 	// Repository
-	userRepository := userrepository.NewUserRepository()
+	userRepository := userrepository.NewUserRepository(mysql)
 
 	// Service
-	userService := userservices.NewUserService(userRepository)
+	userService := userservice.NewUserService(userRepository)
 
 	serverOptions := []httptransport.ServerOption{
 		httptransport.ServerErrorEncoder(userhttp.EncodeError),
 	}
 
-	getUserByIdEndpoint := httptransport.NewServer(
+	router := mux.NewRouter()
+	router.Use(apiscope.LifecycleCtxSetup())
+
+	RegisterEndpoint(router, "/users/{id}", http.MethodGet, httptransport.NewServer(
 		userhttp.MakeGetByIdEndpoint(userService),
 		userhttp.DecodeIdFromUrl,
 		userhttp.EncodeResponse,
 		serverOptions...,
-	)
+	))
 
-	router := mux.NewRouter()
-	router.Use(apiscope.LifecycleCtxSetup())
-
-	RegisterEndpoint(router, getUserByIdEndpoint, "/users/{id}", http.MethodGet)
-	go RegisterConsumer("my-topic", 0, "tcp", "127.0.0.1:9092")
+	RegisterEndpoint(router, "/users", http.MethodPost, httptransport.NewServer(
+		userhttp.MakeCreateEndpoint(userService),
+		userhttp.DecodeCreateUserRequestFromBody,
+		userhttp.EncodeResponse,
+		serverOptions...,
+	))
 
 	if err := http.ListenAndServe(":8080", router); err != nil {
 		logger.Error(fmt.Sprintf("Shutdown %s", err.Error()))
 	}
 }
 
-func RegisterEndpoint(router *mux.Router, server *httptransport.Server, path string, method string) {
+func RegisterEndpoint(router *mux.Router, path string, method string, server *httptransport.Server) {
 	logger.Info(fmt.Sprintf("Registered -> Method:%s Path:%s", method, path))
 	router.Handle(path, server).Methods(method)
 }
-
-func RegisterConsumer(topic string, partition int, protocol string, address string) {
-	logger.Info(fmt.Sprintf("Subscribed Protocol: %s, Address:%s, topic: %s, partition: %d", protocol, address, topic, partition))
-
-	kafka.Consu
-
-	conn, err := kafka.DialLeader(context.Background(), protocol, address, topic, partition)
-	if err != nil {
-		log.Fatal("failed to dial leader:", err)
-	}
-
-	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-	batch := conn.ReadBatch(10e3, 1e6) // fetch 10KB min, 1MB max
-
-	b := make([]byte, 10e3) // 10KB max per message
-	for {
-		_, _ = batch.Read(b)
-		fmt.Println(string(b))
-	}
-
-	/*if err := batch.Close(); err != nil {
-		log.Fatal("failed to close batch:", err)
-	}
-
-	if err := conn.Close(); err != nil {
-		log.Fatal("failed to close connection:", err)
-	}
-}*/

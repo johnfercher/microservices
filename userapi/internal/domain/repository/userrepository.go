@@ -7,5 +7,6 @@ import (
 )
 
 type UserRepository interface {
+	Create(ctx context.Context, user *entity.User) apierror.ApiError
 	GetById(ctx context.Context, id string) (*entity.User, apierror.ApiError)
 }

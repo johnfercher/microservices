@@ -29,7 +29,7 @@ func EncodeError(ctx context.Context, err error, w http.ResponseWriter) {
 	httpStatus := http.StatusInternalServerError
 
 	unknownError := apierror.New(ctx, UnknownError, httpStatus).
-		WithFields(zap.String("err", err.Error()))
+		AppendFields(zap.String("err", err.Error()))
 
 	apierror.Log(ctx, unknownError)
 

@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/go-kit/kit v0.10.0
+	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.8.0
