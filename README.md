@@ -2,7 +2,7 @@
 
 ## Execute
 ```
-$ docker-compose up
+$ bash run.sh
 ```
 
 ## Reference
