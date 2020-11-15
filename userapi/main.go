@@ -13,52 +13,33 @@ import (
 	"net/http"
 )
 
-/*func getKafkaReader(kafkaURL, topic, groupID string) *kafka.Reader {
-	brokers := strings.Split(kafkaURL, ",")
-	return kafka.NewReader(kafka.ReaderConfig{
-		Brokers:  brokers,
-		GroupID:  groupID,
-		Topic:    topic,
-		MinBytes: 10e3, // 10KB
-		MaxBytes: 10e6, // 10MB
-		StartOffset: kafka.LastOffset,
-	})
-}
-
-func main() {
-	// get kafka reader using environment variables.
-	kafkaURL := "localhost:9092"
-	topic := "kafka-topic-test"
-	groupID := "group1"
-k
-	reader := getKafkaReader(kafkaURL, topic, groupID)
-
-	defer reader.Close()
-
-	fmt.Println("start consuming ... !!")
-	for {
-		m, err := reader.ReadMessage(context.Background())
-		if err != nil {
-			log.Fatalln(err)
-		}
-		fmt.Printf("message at topic:%v partition:%v offset:%v	%s = %s\n", m.Topic, m.Partition, m.Offset, string(m.Key), string(m.Value))
-	}
-}*/
-
 var logger = apilog.New()
 
 func main() {
-	// MySql
-	db, err := infra.GetMysqlConnection()
+	// Configs
+	mysqlUrl := "localhost:3306"
+	// mysqlUrl := "user-db:3306" // inside docker
+	mysqlDbName := "UserDb"
+	mysqlAdminUser := "AdminUser"
+	mysqlAdminPassword := "AdminPassword"
+
+	kafkaEventsUrl := "localhost:9092"
+	kafkaEventsTopic := "topic-user-events"
+
+	// Infra
+	mysqlDb, err := infra.NewMysqlDb(mysqlUrl, mysqlDbName, mysqlAdminUser, mysqlAdminPassword)
 	if err != nil {
 		panic(err)
 	}
 
+	kafkaEventsPublisher := infra.NewTopicPublisher(kafkaEventsUrl, kafkaEventsTopic)
+
 	// Repository
-	userRepository := userrepository.NewUserRepository(db)
+	userRepository := userrepository.NewUserRepository(mysqlDb)
 
 	// Service
 	userService := userservice.NewUserService(userRepository)
+	userEvents := userservice.NewUserEvents(userService, kafkaEventsPublisher)
 
 	serverOptions := []httptransport.ServerOption{
 		httptransport.ServerErrorEncoder(userhttp.EncodeError),
@@ -68,35 +49,35 @@ func main() {
 	router.Use(apiscope.LifecycleCtxSetup())
 
 	RegisterEndpoint(router, "/users/{id}", http.MethodGet, httptransport.NewServer(
-		userhttp.MakeGetByIdEndpoint(userService),
+		userhttp.MakeGetByIdEndpoint(userEvents),
 		userhttp.DecodeIdFromUrl,
 		userhttp.EncodeResponse,
 		serverOptions...,
 	))
 
 	RegisterEndpoint(router, "/users", http.MethodPost, httptransport.NewServer(
-		userhttp.MakeCreateEndpoint(userService),
+		userhttp.MakeCreateEndpoint(userEvents),
 		userhttp.DecodeCreateUserRequestFromBody,
 		userhttp.EncodeResponse,
 		serverOptions...,
 	))
 
 	RegisterEndpoint(router, "/users/{id}", http.MethodPut, httptransport.NewServer(
-		userhttp.MakeUpdateEndpoint(userService),
+		userhttp.MakeUpdateEndpoint(userEvents),
 		userhttp.DecodeUpdateUserRequestFromUrlAndBody,
 		userhttp.EncodeResponse,
 		serverOptions...,
 	))
 
 	RegisterEndpoint(router, "/users/{id}/active", http.MethodDelete, httptransport.NewServer(
-		userhttp.MakeDeactivateEndpoint(userService),
+		userhttp.MakeDeactivateEndpoint(userEvents),
 		userhttp.DecodeIdFromUrl,
 		userhttp.EncodeResponse,
 		serverOptions...,
 	))
 
 	RegisterEndpoint(router, "/users/{id}/active", http.MethodPut, httptransport.NewServer(
-		userhttp.MakeActivateEndpoint(userService),
+		userhttp.MakeActivateEndpoint(userEvents),
 		userhttp.DecodeIdFromUrl,
 		userhttp.EncodeResponse,
 		serverOptions...,

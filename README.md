@@ -1,8 +1,15 @@
 # Microservices
 
-## Execute
+## Execute Zookeeper + Kafka
 ```
 $ bash run.sh
+```
+
+## Create Kafka Topic
+```
+$ create_topic.sh
+$ Kafka Topic Name: my-topic
+$ Creating kafka-topic my-topic.
 ```
 
 ## Reference
