@@ -10,7 +10,7 @@ func NewStdoutWriter() *stdoutWriter {
 }
 
 func (self *stdoutWriter) Write(p []byte) (n int, err error) {
-	fmt.Println(string(p))
+	fmt.Print(string(p))
 	return len(p), nil
 }
 
