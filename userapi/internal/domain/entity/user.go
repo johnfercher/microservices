@@ -4,6 +4,7 @@ type User struct {
 	Id      string    `json:"id"`
 	Name    string    `json:"name"`
 	Type    int       `json:"type"`
+	Active  bool      `json:"active"`
 	Address []Address `json:"addresses,omitempty"`
 }
 

@@ -10,10 +10,14 @@ import (
 )
 
 type ApiError interface {
+	// Public
 	GetStatusCode() int
 	Error() string
 	WithMessage(message string) ApiError
 	AppendFields(fields ...zap.Field) ApiError
+
+	// Private
+	getFields() []zap.Field
 }
 
 func New(ctx context.Context, errorCode string, statusCode int) ApiError {
@@ -60,6 +64,10 @@ func (self *apiError) Error() string {
 	return string(bytesErr)
 }
 
+func (self *apiError) getFields() []zap.Field {
+	return self.fields
+}
+
 func Log(ctx context.Context, err ApiError) {
-	apilog.Error(ctx, err.Error())
+	apilog.Error(ctx, err.Error(), err.getFields()...)
 }

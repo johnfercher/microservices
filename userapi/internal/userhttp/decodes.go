@@ -56,3 +56,40 @@ func DecodeCreateUserRequestFromBody(ctx context.Context, r *http.Request) (inte
 
 	return createRequest, nil
 }
+
+func DecodeUpdateUserRequestFromUrlAndBody(ctx context.Context, r *http.Request) (interface{}, error) {
+	uriParams := mux.Vars(r)
+
+	id := uriParams["id"]
+	if id == "" {
+		err := apierror.New(ctx, InvalidUrlParametersError, http.StatusBadRequest).
+			WithMessage(fmt.Sprint("Id cannot be empty"))
+
+		apierror.Log(ctx, err)
+		return nil, err
+	}
+
+	bytes, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		apiErr := apierror.New(ctx, EmptyBodyError, http.StatusBadRequest).
+			AppendFields(zap.String("err", err.Error()))
+
+		apierror.Log(ctx, apiErr)
+		return nil, apiErr
+	}
+
+	updateRequest := &contracts.UpdateUserRequest{}
+
+	err = json.Unmarshal(bytes, updateRequest)
+	if err != nil {
+		apiErr := apierror.New(ctx, DecodebodyError, http.StatusBadRequest).
+			AppendFields(zap.String("err", err.Error()))
+
+		apierror.Log(ctx, apiErr)
+		return nil, apiErr
+	}
+
+	updateRequest.Id = id
+
+	return updateRequest, nil
+}

@@ -49,13 +49,13 @@ var logger = apilog.New()
 
 func main() {
 	// MySql
-	mysql, err := infra.GetMysqlConnection()
+	db, err := infra.GetMysqlConnection()
 	if err != nil {
 		panic(err)
 	}
 
 	// Repository
-	userRepository := userrepository.NewUserRepository(mysql)
+	userRepository := userrepository.NewUserRepository(db)
 
 	// Service
 	userService := userservice.NewUserService(userRepository)
@@ -77,6 +77,27 @@ func main() {
 	RegisterEndpoint(router, "/users", http.MethodPost, httptransport.NewServer(
 		userhttp.MakeCreateEndpoint(userService),
 		userhttp.DecodeCreateUserRequestFromBody,
+		userhttp.EncodeResponse,
+		serverOptions...,
+	))
+
+	RegisterEndpoint(router, "/users/{id}", http.MethodPut, httptransport.NewServer(
+		userhttp.MakeUpdateEndpoint(userService),
+		userhttp.DecodeUpdateUserRequestFromUrlAndBody,
+		userhttp.EncodeResponse,
+		serverOptions...,
+	))
+
+	RegisterEndpoint(router, "/users/{id}/active", http.MethodDelete, httptransport.NewServer(
+		userhttp.MakeDeactivateEndpoint(userService),
+		userhttp.DecodeIdFromUrl,
+		userhttp.EncodeResponse,
+		serverOptions...,
+	))
+
+	RegisterEndpoint(router, "/users/{id}/active", http.MethodPut, httptransport.NewServer(
+		userhttp.MakeActivateEndpoint(userService),
+		userhttp.DecodeIdFromUrl,
 		userhttp.EncodeResponse,
 		serverOptions...,
 	))

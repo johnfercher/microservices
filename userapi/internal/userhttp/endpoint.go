@@ -19,3 +19,24 @@ func MakeCreateEndpoint(userService service.UserService) func(ctx context.Contex
 		return userService.Create(ctx, createUserRequest)
 	}
 }
+
+func MakeUpdateEndpoint(userService service.UserService) func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		updateUserRequest := request.(*contracts.UpdateUserRequest)
+		return userService.Update(ctx, updateUserRequest)
+	}
+}
+
+func MakeDeactivateEndpoint(userService service.UserService) func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		id := request.(string)
+		return userService.Deactivate(ctx, id)
+	}
+}
+
+func MakeActivateEndpoint(userService service.UserService) func(ctx context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		id := request.(string)
+		return userService.Activate(ctx, id)
+	}
+}
