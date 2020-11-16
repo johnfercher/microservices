@@ -18,7 +18,7 @@ var logger = apilog.New()
 func main() {
 	// Configs
 	mysqlUrl := "localhost:3306"
-	// mysqlUrl := "user-db:3306" // inside docker
+	//mysqlUrl := "user-db:3306" // inside docker
 	mysqlDbName := "UserDb"
 	mysqlAdminUser := "AdminUser"
 	mysqlAdminPassword := "AdminPassword"
@@ -47,6 +47,13 @@ func main() {
 
 	router := mux.NewRouter()
 	router.Use(apiscope.LifecycleCtxSetup())
+
+	RegisterEndpoint(router, "/users/search", http.MethodGet, httptransport.NewServer(
+		userhttp.MakeSearchEndpoint(userEvents),
+		userhttp.DecodeSearchFromUrl,
+		userhttp.EncodeResponse,
+		serverOptions...,
+	))
 
 	RegisterEndpoint(router, "/users/{id}", http.MethodGet, httptransport.NewServer(
 		userhttp.MakeGetByIdEndpoint(userEvents),
@@ -79,6 +86,20 @@ func main() {
 	RegisterEndpoint(router, "/users/{id}/active", http.MethodPut, httptransport.NewServer(
 		userhttp.MakeActivateEndpoint(userEvents),
 		userhttp.DecodeIdFromUrl,
+		userhttp.EncodeResponse,
+		serverOptions...,
+	))
+
+	RegisterEndpoint(router, "/users/{id}/types", http.MethodPut, httptransport.NewServer(
+		userhttp.MakeAddTypeEndpoint(userEvents),
+		userhttp.DecodeUserTypeFromUrlAndBody,
+		userhttp.EncodeResponse,
+		serverOptions...,
+	))
+
+	RegisterEndpoint(router, "/users/{id}/types", http.MethodDelete, httptransport.NewServer(
+		userhttp.MakeRemoveTypeEndpoint(userEvents),
+		userhttp.DecodeUserTypeFromUrlAndBody,
 		userhttp.EncodeResponse,
 		serverOptions...,
 	))

@@ -6,8 +6,8 @@ import (
 )
 
 type CreateUserRequest struct {
-	Name string `json:"name"`
-	Type int    `json:"type"`
+	Name  string        `json:"name"`
+	Types []entity.Type `json:"types"`
 }
 
 func (self *CreateUserRequest) ToUser() (*entity.User, error) {
@@ -16,10 +16,15 @@ func (self *CreateUserRequest) ToUser() (*entity.User, error) {
 		return nil, err
 	}
 
+	var types []entity.Type
+	for _, userType := range self.Types {
+		types = append(types, userTypeStringToEntity(userType.Type, id.String()))
+	}
+
 	return &entity.User{
 		Id:     id.String(),
 		Name:   self.Name,
-		Type:   self.Type,
+		Types:  types,
 		Active: true,
 	}, nil
 }
@@ -27,14 +32,28 @@ func (self *CreateUserRequest) ToUser() (*entity.User, error) {
 type UpdateUserRequest struct {
 	Id   string `json:"-"`
 	Name string `json:"name"`
-	Type int    `json:"type"`
 }
 
 func (self *UpdateUserRequest) ToUser() *entity.User {
 	return &entity.User{
 		Id:     self.Id,
 		Name:   self.Name,
-		Type:   self.Type,
 		Active: true,
 	}
+}
+
+func userTypeStringToEntity(userType string, userId string) entity.Type {
+	return entity.Type{
+		UserId: userId,
+		Type:   userType,
+	}
+}
+
+type SearchRequest struct {
+	Id     *string
+	Name   *string
+	Active *bool
+	Type   *string
+	Limit  int64
+	Offset int64
 }

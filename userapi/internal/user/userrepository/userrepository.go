@@ -2,11 +2,14 @@ package userrepository
 
 import (
 	"context"
+	"fmt"
+	"github.com/johnfercher/microservices/userapi/internal/contracts"
 	"github.com/johnfercher/microservices/userapi/internal/domain/entity"
 	"github.com/johnfercher/microservices/userapi/pkg/api/apierror"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -24,7 +27,42 @@ func NewUserRepository(db *gorm.DB) *userRepository {
 }
 
 func (self *userRepository) Create(ctx context.Context, user *entity.User) apierror.ApiError {
-	tx := self.db.Create(user)
+	err := self.db.Transaction(func(tx *gorm.DB) error {
+		if tx.Create(user).Error != nil {
+			apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).
+				WithMessage("It was not possible create user").
+				AppendFields(zap.String("err", tx.Error.Error()))
+
+			apierror.Log(ctx, apiErr)
+			return apiErr
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err.(apierror.ApiError)
+	}
+
+	return nil
+}
+
+func (self *userRepository) AddUserType(ctx context.Context, userType *entity.Type) apierror.ApiError {
+	tx := self.db.Create(userType)
+
+	if tx.Error != nil {
+		apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).
+			AppendFields(zap.String("err", tx.Error.Error()))
+
+		apierror.Log(ctx, apiErr)
+		return apiErr
+	}
+
+	return nil
+}
+
+func (self *userRepository) RemoveUserType(ctx context.Context, userType *entity.Type) apierror.ApiError {
+	tx := self.db.Where("user_id = ? AND type = ?", userType.UserId, userType.Type).Delete(userType)
 
 	if tx.Error != nil {
 		apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).
@@ -43,6 +81,17 @@ func (self *userRepository) GetById(ctx context.Context, id string) (*entity.Use
 
 	if tx.Error != nil {
 		apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).
+			WithMessage("Cannot load user").
+			AppendFields(zap.String("err", tx.Error.Error()))
+
+		apierror.Log(ctx, apiErr)
+		return nil, apiErr
+	}
+
+	err := self.db.Model(user).Association("Types").Find(&user.Types)
+	if err != nil {
+		apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).
+			WithMessage("Cannot load types from user").
 			AppendFields(zap.String("err", tx.Error.Error()))
 
 		apierror.Log(ctx, apiErr)
@@ -52,10 +101,70 @@ func (self *userRepository) GetById(ctx context.Context, id string) (*entity.Use
 	return user, nil
 }
 
+func (self *userRepository) Search(ctx context.Context, searchRequest *contracts.SearchRequest) (*entity.Page, apierror.ApiError) {
+	page := &entity.Page{
+		Paging: entity.Paging{
+			Offset: searchRequest.Offset,
+			Limit:  searchRequest.Limit,
+		},
+		Results: []entity.User{},
+	}
+
+	query := []string{}
+	args := []string{}
+
+	if searchRequest.Id != nil {
+		query = append(query, "users.id = ?")
+		args = append(args, *searchRequest.Id)
+	}
+
+	if searchRequest.Name != nil {
+		query = append(query, "users.name = ?")
+		args = append(args, *searchRequest.Name)
+	}
+
+	if searchRequest.Active != nil {
+		query = append(query, "users.active = ?")
+		args = append(args, fmt.Sprintf("%v", searchRequest.Active))
+	}
+
+	if searchRequest.Type != nil {
+		query = append(query, "types.type = ?")
+		args = append(args, *searchRequest.Type)
+	}
+
+	var count int64 = 0
+	tx := self.db.Table("users").
+		Select("users.id, users.name, users.active").
+		Joins("left join types on types.user_id = users.id").
+		Where(strings.Join(query, ","), args).
+		Limit(int(searchRequest.Limit)).
+		Count(&count)
+
+	page.Paging.Total = count
+
+	tx = self.db.Table("users").
+		Select("users.id, users.name, users.active").
+		Joins("left join types on types.user_id = users.id").
+		Where(strings.Join(query, ","), args).
+		Limit(int(searchRequest.Limit)).
+		Scan(&page.Results)
+
+	if tx.Error != nil {
+		apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).
+			WithMessage("Search user").
+			AppendFields(zap.String("err", tx.Error.Error()))
+
+		apierror.Log(ctx, apiErr)
+		return nil, apiErr
+	}
+
+	return page, nil
+}
+
 func (self *userRepository) Update(ctx context.Context, user *entity.User) apierror.ApiError {
-	tx := self.db.Model(user).Where("id = ?", user.Id).Updates(map[string]interface{}{
+	tx := self.db.Model(&entity.User{}).Where("id = ?", user.Id).Updates(map[string]interface{}{
 		"name": user.Name,
-		"type": user.Type,
 	})
 
 	if tx.Error != nil {

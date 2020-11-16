@@ -46,6 +46,10 @@ func (self *userService) GetById(ctx context.Context, id string) (*entity.User, 
 	return self.userRepository.GetById(ctx, id)
 }
 
+func (self *userService) Search(ctx context.Context, searchRequest *contracts.SearchRequest) (*entity.Page, apierror.ApiError) {
+	return self.userRepository.Search(ctx, searchRequest)
+}
+
 func (self *userService) Update(ctx context.Context, updateRequest *contracts.UpdateUserRequest) (*entity.User, apierror.ApiError) {
 	user := updateRequest.ToUser()
 
@@ -54,7 +58,25 @@ func (self *userService) Update(ctx context.Context, updateRequest *contracts.Up
 		return nil, err
 	}
 
-	return user, nil
+	return self.GetById(ctx, updateRequest.Id)
+}
+
+func (self *userService) AddUserType(ctx context.Context, userType *entity.Type) (*entity.User, apierror.ApiError) {
+	err := self.userRepository.AddUserType(ctx, userType)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.GetById(ctx, userType.UserId)
+}
+
+func (self *userService) RemoveUserType(ctx context.Context, userType *entity.Type) (*entity.User, apierror.ApiError) {
+	err := self.userRepository.RemoveUserType(ctx, userType)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.GetById(ctx, userType.UserId)
 }
 
 func (self *userService) Deactivate(ctx context.Context, id string) (*entity.User, apierror.ApiError) {

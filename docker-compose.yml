@@ -6,6 +6,9 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
 
+    networks:
+      - prod
+
   kafka:
     image: confluentinc/cp-kafka:latest
     depends_on:
@@ -19,3 +22,34 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+    networks:
+      - prod
+
+  user-db:
+    image: user-db
+    container_name: user-db
+
+    expose:
+      - '3306'
+    ports:
+      - "3306:3306"
+
+    environment:
+      MYSQL_ROOT_PASSWORD: supersecret
+      MYSQL_DATABASE: UserDb
+      MYSQL_USER: AdminUser
+      MYSQL_PASSWORD: AdminPassword
+
+    volumes:
+      - mysql:/var/lib/mysql
+
+    networks:
+      - prod
+
+volumes:
+  mysql:
+
+networks:
+  prod:
+    driver: bridge

@@ -37,3 +37,7 @@ func EncodeError(ctx context.Context, err error, w http.ResponseWriter) {
 	_ = json.NewEncoder(w).Encode(unknownError)
 	return
 }
+
+func EncodeFinalizer(ctx context.Context, code int, r *http.Request) {
+
+}

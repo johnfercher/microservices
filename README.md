@@ -8,8 +8,8 @@ $ bash run.sh
 ## Create Kafka Topic
 ```
 $ create_topic.sh
-$ Kafka Topic Name: my-topic
-$ Creating kafka-topic my-topic.
+$ Kafka Topic Name: topic-user-events
+$ Creating kafka-topic topic-user-events.
 ```
 
 ## Reference

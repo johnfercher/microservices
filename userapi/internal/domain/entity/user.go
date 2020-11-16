@@ -1,15 +1,26 @@
 package entity
 
+type Page struct {
+	Paging  Paging `json:"paging"`
+	Results []User `json:"results"`
+}
+
+type Paging struct {
+	Limit  int64 `json:"limit"`
+	Offset int64 `json:"offset"`
+	Total  int64 `json:"total"`
+}
+
 type User struct {
 	Id      string    `json:"id"`
 	Name    string    `json:"name"`
-	Type    int       `json:"type"`
 	Active  bool      `json:"active"`
+	Types   []Type    `json:"types,omitempty"`
 	Address []Address `json:"addresses,omitempty"`
 }
 
 type Address struct {
-	Id           string `json:"id"`
+	Id           string `json:"-"`
 	UserId       string `json:"user_id,omitempty"`
 	Complement   string `json:"complement,omitempty"`
 	Number       string `json:"number,omitempty"`
@@ -20,4 +31,9 @@ type Address struct {
 	Code         string `json:"code,omitempty"`
 	Latitude     string `json:"latitude,omitempty"`
 	Longitude    string `json:"longitude,omitempty"`
+}
+
+type Type struct {
+	Type   string `json:"type"`
+	UserId string `json:"-"`
 }

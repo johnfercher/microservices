@@ -3,7 +3,6 @@ USE UserDb;
 CREATE TABLE IF NOT EXISTS users(
     `id` varchar(36) NOT NULL,
     `name` varchar(100) NOT NULL,
-    `type` integer NOT NULL,
     `active` boolean NOT NULL,
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
@@ -28,22 +27,12 @@ CREATE TABLE IF NOT EXISTS `address`(
   DEFAULT CHARACTER SET = UTF8MB4
   COLLATE = utf8mb4_unicode_520_ci;
 
-CREATE TABLE IF NOT EXISTS `user_type_domain`(
-    `id` integer NOT NULL,
-    `name` varchar(20) NOT NULL,
-
-    PRIMARY KEY (`id`)
-) ENGINE = InnoDB
-  DEFAULT CHARACTER SET = UTF8MB4
-  COLLATE = utf8mb4_unicode_520_ci;
-
-
-CREATE TABLE IF NOT EXISTS `user_type`(
-    `user_type_id` integer NOT NULL,
+CREATE TABLE IF NOT EXISTS types(
+    `type` varchar(36) NOT NULL,
     `user_id` varchar(36) NOT NULL,
 
-    CONSTRAINT `fk_type_user_id` FOREIGN KEY (`user_id`) REFERENCES users (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_type_user_type_id` FOREIGN KEY (`user_type_id`) REFERENCES `user_type_domain` (`id`) ON DELETE CASCADE
+    CONSTRAINT fk_user_type_user_id FOREIGN KEY (`user_id`) REFERENCES users (`id`) ON DELETE CASCADE,
+    CONSTRAINT unique_type_user_id UNIQUE (`type`, `user_id`)
 ) ENGINE = InnoDB
   DEFAULT CHARACTER SET = UTF8MB4
   COLLATE = utf8mb4_unicode_520_ci;
