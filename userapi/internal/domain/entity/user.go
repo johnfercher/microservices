@@ -19,6 +19,11 @@ type User struct {
 	Address []Address `json:"addresses,omitempty"`
 }
 
+type Type struct {
+	Type   string `json:"type"`
+	UserId string `json:"-"`
+}
+
 type Address struct {
 	Id           string `json:"-"`
 	UserId       string `json:"user_id,omitempty"`
@@ -31,9 +36,4 @@ type Address struct {
 	Code         string `json:"code,omitempty"`
 	Latitude     string `json:"latitude,omitempty"`
 	Longitude    string `json:"longitude,omitempty"`
-}
-
-type Type struct {
-	Type   string `json:"type"`
-	UserId string `json:"-"`
 }

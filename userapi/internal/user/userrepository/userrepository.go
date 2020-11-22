@@ -133,6 +133,7 @@ func (self *userRepository) Search(ctx context.Context, searchRequest *contracts
 	}
 
 	tx := self.db.Table("users").
+		Distinct("users.id").
 		Select("users.id, users.name, users.active").
 		Joins("left join types on types.user_id = users.id")
 
@@ -141,6 +142,17 @@ func (self *userRepository) Search(ctx context.Context, searchRequest *contracts
 	}
 
 	tx = tx.Limit(int(searchRequest.Limit))
+
+	tx = tx.Scan(&page.Results)
+
+	if tx.Error != nil {
+		apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).
+			WithMessage("Search user").
+			AppendFields(zap.String("err", tx.Error.Error()))
+
+		apierror.Log(ctx, apiErr)
+		return nil, apiErr
+	}
 
 	var count int64 = 0
 
@@ -156,17 +168,6 @@ func (self *userRepository) Search(ctx context.Context, searchRequest *contracts
 	}
 
 	page.Paging.Total = count
-
-	tx = tx.Scan(&page.Results)
-
-	if tx.Error != nil {
-		apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).
-			WithMessage("Search user").
-			AppendFields(zap.String("err", tx.Error.Error()))
-
-		apierror.Log(ctx, apiErr)
-		return nil, apiErr
-	}
 
 	return page, nil
 }
