@@ -1,0 +1,12 @@
+mysql:
+  url: "localhost:3306"
+  db: "UserDb"
+  user: "AdminUser"
+  password: "AdminPassword"
+
+kafka:
+  url: "localhost:9092"
+  topic: "topic-user-events"
+
+logstash:
+  url: "localhost:12201"

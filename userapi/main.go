@@ -8,31 +8,32 @@ import (
 	"github.com/johnfercher/microservices/userapi/internal/user/userrepository"
 	"github.com/johnfercher/microservices/userapi/internal/user/userservice"
 	"github.com/johnfercher/microservices/userapi/internal/userhttp"
+	"github.com/johnfercher/microservices/userapi/pkg/api/apiglobal"
 	"github.com/johnfercher/microservices/userapi/pkg/api/apilog"
 	"github.com/johnfercher/microservices/userapi/pkg/api/apiscope"
+	"github.com/sirupsen/logrus"
 	"net/http"
+	"os"
 )
 
-var logger = apilog.New("localhost:12201")
+var logger *logrus.Logger
 
 func main() {
-	// Configs
-	mysqlUrl := "localhost:3306"
-	//mysqlUrl := "user-db:3306" // inside docker
-	mysqlDbName := "UserDb"
-	mysqlAdminUser := "AdminUser"
-	mysqlAdminPassword := "AdminPassword"
-
-	kafkaEventsUrl := "localhost:9092"
-	kafkaEventsTopic := "topic-user-events"
-
-	// Infra
-	mysqlDb, err := infra.NewMysqlDb(mysqlUrl, mysqlDbName, mysqlAdminUser, mysqlAdminPassword)
+	cfg, err := apiglobal.SetupAndReadGlobalConfig(os.Args)
 	if err != nil {
 		panic(err)
 	}
 
-	kafkaEventsPublisher := infra.NewTopicPublisher(kafkaEventsUrl, kafkaEventsTopic)
+	// Infra
+	logger = apilog.New()
+	logger.Info(fmt.Sprintf("%v", cfg))
+
+	mysqlDb, err := infra.NewMysqlDb(cfg.Mysql.Url, cfg.Mysql.Db, cfg.Mysql.User, cfg.Mysql.Password)
+	if err != nil {
+		panic(err)
+	}
+
+	kafkaEventsPublisher := infra.NewTopicPublisher(cfg.Kafka.Url, cfg.Kafka.Topic)
 
 	// Repository
 	userRepository := userrepository.NewUserRepository(mysqlDb)

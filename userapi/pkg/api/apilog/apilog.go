@@ -3,6 +3,7 @@ package apilog
 import (
 	"context"
 	"github.com/johnfercher/microservices/userapi/pkg/api"
+	"github.com/johnfercher/microservices/userapi/pkg/api/apiglobal"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 	graylog "gopkg.in/gemnasium/logrus-graylog-hook.v2"
@@ -27,7 +28,7 @@ func Warn(ctx context.Context, message string, fields ...zap.Field) {
 	logger.Warn(message /*, fields...*/)
 }
 
-func New(logstashServer string) *logrus.Logger {
+func New() *logrus.Logger {
 	var logger = &logrus.Logger{
 		Out:   os.Stderr,
 		Hooks: make(logrus.LevelHooks),
@@ -42,7 +43,7 @@ func New(logstashServer string) *logrus.Logger {
 		},
 	}
 
-	hook := graylog.NewGraylogHook(logstashServer, map[string]interface{}{})
+	hook := graylog.NewGraylogHook(apiglobal.GetGlobalConfig().Logstash.Url, map[string]interface{}{})
 	logger.AddHook(hook)
 
 	return logger

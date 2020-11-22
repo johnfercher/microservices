@@ -2,6 +2,7 @@ version: '2'
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
+
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -9,12 +10,14 @@ services:
     networks:
       - prod
 
+
+
   kafka:
     image: confluentinc/cp-kafka:latest
-    depends_on:
-      - zookeeper
+
     ports:
       - 9092:9092
+
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -25,6 +28,79 @@ services:
 
     networks:
       - prod
+
+    depends_on:
+      - zookeeper
+
+
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
+
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+
+    environment:
+      discovery.type: "single-node"
+      xpack.security.enabled: "false"
+
+    volumes:
+      - /usr/share/elasticsearch/data:/usr/share/elasticsearch/data
+
+    networks:
+      - prod
+
+
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.10.0
+
+    links:
+      - elasticsearch
+
+    environment:
+      - "ES_JAVA_OPTS=-Xmx256m -Xms256m"
+      - cluster.routing.allocation.disk.threshold_enabled=false
+
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+
+    ports:
+      - 12201:12201/udp
+      - 12202:12202
+
+    volumes:
+      - .:/etc/logstash
+
+    command: logstash -f /etc/logstash/logstash.conf
+
+    networks:
+      - prod
+
+    depends_on:
+      - elasticsearch
+
+
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.10.0
+
+    ports:
+      - "5601:5601"
+
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+
+    networks:
+      - prod
+
+    depends_on:
+      - elasticsearch
+
+
 
   user-db:
     image: user-db
@@ -47,45 +123,26 @@ services:
     networks:
       - prod
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    environment:
-      discovery.type: "single-node"
-      xpack.security.enabled: "false"
-    volumes:
-      - /usr/share/elasticsearch/data:/usr/share/elasticsearch/data
 
-  logstash:
-    image: docker.elastic.co/logstash/logstash:7.10.0
-    links:
-      - elasticsearch
-    environment:
-      - "ES_JAVA_OPTS=-Xmx256m -Xms256m"
-      - cluster.routing.allocation.disk.threshold_enabled=false
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    ports:
-      - 12201:12201/udp
-      - 12202:12202
-    volumes:
-      - .:/etc/logstash
-    command: logstash -f /etc/logstash/logstash.conf
-    depends_on:
-      - elasticsearch
 
-  kibana:
-    image: docker.elastic.co/kibana/kibana:7.10.0
+  user-api:
+    image: user-api
+    container_name: user-api
+
+    expose:
+      - '8080'
     ports:
-      - "5601:5601"
-    environment:
-      ELASTICSEARCH_URL: http://elasticsearch:9200
+      - "8080:8080"
+
+    networks:
+      - prod
+
     depends_on:
-      - elasticsearch
+      - user-db
+      - kafka
+      - logstash
+
+
 
 volumes:
   mysql:

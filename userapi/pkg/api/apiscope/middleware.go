@@ -19,7 +19,7 @@ func LifecycleCtxSetup() func(next http.Handler) http.Handler {
 
 			ctx := r.Context()
 
-			logger := apilog.New("localhost:12201")
+			logger := apilog.New()
 			/*logger = logger.WithFields(logrus.String(api.CtxRequestId, requestId))
 			logger = logger.With(zap.String(api.CtxRequestMethod, r.Method))
 			logger = logger.With(zap.String(api.CtxRequestHost, r.Host))
