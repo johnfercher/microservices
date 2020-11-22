@@ -2,7 +2,6 @@ package userrepository
 
 import (
 	"context"
-	"fmt"
 	"github.com/johnfercher/microservices/userapi/internal/contracts"
 	"github.com/johnfercher/microservices/userapi/internal/domain/entity"
 	"github.com/johnfercher/microservices/userapi/pkg/api/apierror"
@@ -111,7 +110,7 @@ func (self *userRepository) Search(ctx context.Context, searchRequest *contracts
 	}
 
 	query := []string{}
-	args := []string{}
+	args := []interface{}{}
 
 	if searchRequest.Id != nil {
 		query = append(query, "users.id = ?")
@@ -125,7 +124,7 @@ func (self *userRepository) Search(ctx context.Context, searchRequest *contracts
 
 	if searchRequest.Active != nil {
 		query = append(query, "users.active = ?")
-		args = append(args, fmt.Sprintf("%v", searchRequest.Active))
+		args = append(args, *searchRequest.Active)
 	}
 
 	if searchRequest.Type != nil {
@@ -133,22 +132,32 @@ func (self *userRepository) Search(ctx context.Context, searchRequest *contracts
 		args = append(args, *searchRequest.Type)
 	}
 
-	var count int64 = 0
 	tx := self.db.Table("users").
 		Select("users.id, users.name, users.active").
-		Joins("left join types on types.user_id = users.id").
-		Where(strings.Join(query, ","), args).
-		Limit(int(searchRequest.Limit)).
-		Count(&count)
+		Joins("left join types on types.user_id = users.id")
+
+	if len(query) != 0 {
+		tx = tx.Where(strings.Join(query, " AND "), args...)
+	}
+
+	tx = tx.Limit(int(searchRequest.Limit))
+
+	var count int64 = 0
+
+	tx.Count(&count)
+
+	if tx.Error != nil {
+		apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).
+			WithMessage("Search count user").
+			AppendFields(zap.String("err", tx.Error.Error()))
+
+		apierror.Log(ctx, apiErr)
+		return nil, apiErr
+	}
 
 	page.Paging.Total = count
 
-	tx = self.db.Table("users").
-		Select("users.id, users.name, users.active").
-		Joins("left join types on types.user_id = users.id").
-		Where(strings.Join(query, ","), args).
-		Limit(int(searchRequest.Limit)).
-		Scan(&page.Results)
+	tx = tx.Scan(&page.Results)
 
 	if tx.Error != nil {
 		apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).

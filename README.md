@@ -1,6 +1,18 @@
 # Microservices
 
-## Execute Zookeeper + Kafka
+## Addresses
+* Kibana
+    * http://localhost:5601
+* Elasticsearch
+    * http://localhost:9200
+* Zookeeper
+    * http://localhost:2181
+* Kafka1
+    * http://localhost:9092
+* MySQL
+    * http://localhost:3306
+
+## Execute Entire Solution
 ```
 $ bash run.sh
 ```
@@ -10,6 +22,13 @@ $ bash run.sh
 $ create_topic.sh
 $ Kafka Topic Name: topic-user-events
 $ Creating kafka-topic topic-user-events.
+```
+
+## Setup Elasticsearch
+```
+cd /usr/share
+mkdir elasticsearch/data/nodes
+chmod 777 -R /elasticsearch/data
 ```
 
 ## Reference

@@ -13,7 +13,7 @@ import (
 	"net/http"
 )
 
-var logger = apilog.New()
+var logger = apilog.New("localhost:12201")
 
 func main() {
 	// Configs

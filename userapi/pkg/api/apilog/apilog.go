@@ -3,32 +3,53 @@ package apilog
 import (
 	"context"
 	"github.com/johnfercher/microservices/userapi/pkg/api"
+	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	graylog "gopkg.in/gemnasium/logrus-graylog-hook.v2"
+	"os"
 )
 
 func Info(ctx context.Context, message string, fields ...zap.Field) {
 	logger := api.GetContextLogger(ctx)
 
-	logger.Info(message, fields...)
+	logger.Info(message /*, fields...*/)
 }
 
 func Error(ctx context.Context, message string, fields ...zap.Field) {
 	logger := api.GetContextLogger(ctx)
 
-	logger.Error(message, fields...)
+	logger.Error(message /*, fields...*/)
 }
 
 func Warn(ctx context.Context, message string, fields ...zap.Field) {
 	logger := api.GetContextLogger(ctx)
 
-	logger.Warn(message, fields...)
+	logger.Warn(message /*, fields...*/)
 }
 
-func New() *zap.Logger {
+func New(logstashServer string) *logrus.Logger {
+	var logger = &logrus.Logger{
+		Out:   os.Stderr,
+		Hooks: make(logrus.LevelHooks),
+		Level: logrus.DebugLevel,
+		Formatter: &logrus.JSONFormatter{
+			FieldMap: logrus.FieldMap{
+				logrus.FieldKeyTime:  "@timestamp",
+				logrus.FieldKeyLevel: "log.level",
+				logrus.FieldKeyMsg:   "message",
+				logrus.FieldKeyFunc:  "function.name", // non-ECS
+			},
+		},
+	}
+
+	hook := graylog.NewGraylogHook(logstashServer, map[string]interface{}{})
+	logger.AddHook(hook)
+
+	return logger
+
 	/*config := zap.NewProductionConfig()
 	config.OutputPaths = []string{"stdout"}
-	zapLogger, err := config.Build()*/
+	zapLogger, err := config.Build()
 
 	lvl := zap.NewAtomicLevelAt(zap.InfoLevel)
 
@@ -49,7 +70,10 @@ func New() *zap.Logger {
 	var options []zap.Option
 
 	options = append(options, zap.AddCaller(), zap.AddStacktrace(zap.ErrorLevel), zap.AddCallerSkip(2))
+	stdErr := zapcore.Lock(zapcore.AddSync(os.Stderr))
 
 	encoder := zapcore.NewJSONEncoder(encodeConfig)
-	return zap.New(zapcore.NewCore(encoder, NewStdoutWriter(), lvl), options...)
+	logger := zap.New(zapcore.NewCore(encoder, stdErr, lvl), options...)
+
+	return logger*/
 }

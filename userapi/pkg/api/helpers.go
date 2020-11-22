@@ -2,7 +2,7 @@ package api
 
 import (
 	"context"
-	"go.uber.org/zap"
+	"github.com/sirupsen/logrus"
 )
 
 // Generic
@@ -24,12 +24,12 @@ func GetContextStringField(ctx context.Context, key string) string {
 }
 
 // Logging
-func AddContextLogger(ctx context.Context, logger *zap.Logger) context.Context {
+func AddContextLogger(ctx context.Context, logger *logrus.Logger) context.Context {
 	return AddContextField(ctx, CtxLogger, logger)
 }
 
-func GetContextLogger(ctx context.Context) *zap.Logger {
-	logger, ok := GetContextField(ctx, CtxLogger).(*zap.Logger)
+func GetContextLogger(ctx context.Context) *logrus.Logger {
+	logger, ok := GetContextField(ctx, CtxLogger).(*logrus.Logger)
 	if !ok {
 		return nil
 	}
