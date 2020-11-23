@@ -35,8 +35,6 @@ func NewTopicPublisher(kafkaUrl string, topic string) *topicPublisher {
 }
 
 func (self *topicPublisher) Publish(ctx context.Context, event string, message interface{}) apierror.ApiError {
-	return nil
-
 	if event == "" {
 		apiErr := apierror.New(ctx, eventEmptyError, http.StatusInternalServerError)
 
