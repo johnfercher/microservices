@@ -8,7 +8,7 @@ import (
 	"github.com/johnfercher/microservices/userapi/internal/contracts"
 	"github.com/johnfercher/microservices/userapi/internal/domain/entity"
 	"github.com/johnfercher/microservices/userapi/pkg/api/apierror"
-	"go.uber.org/zap"
+	"github.com/johnfercher/microservices/userapi/pkg/api/apifields"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -39,7 +39,7 @@ func DecodeCreateUserRequestFromBody(ctx context.Context, r *http.Request) (inte
 	bytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		apiErr := apierror.New(ctx, EmptyBodyError, http.StatusBadRequest).
-			AppendFields(zap.String("err", err.Error()))
+			AppendFields(apifields.String("err", err.Error()))
 
 		apierror.Log(ctx, apiErr)
 		return nil, apiErr
@@ -50,7 +50,7 @@ func DecodeCreateUserRequestFromBody(ctx context.Context, r *http.Request) (inte
 	err = json.Unmarshal(bytes, createRequest)
 	if err != nil {
 		apiErr := apierror.New(ctx, DecodebodyError, http.StatusBadRequest).
-			AppendFields(zap.String("err", err.Error()))
+			AppendFields(apifields.String("err", err.Error()))
 
 		apierror.Log(ctx, apiErr)
 		return nil, apiErr
@@ -74,7 +74,7 @@ func DecodeUpdateUserRequestFromUrlAndBody(ctx context.Context, r *http.Request)
 	bytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		apiErr := apierror.New(ctx, EmptyBodyError, http.StatusBadRequest).
-			AppendFields(zap.String("err", err.Error()))
+			AppendFields(apifields.String("err", err.Error()))
 
 		apierror.Log(ctx, apiErr)
 		return nil, apiErr
@@ -85,7 +85,7 @@ func DecodeUpdateUserRequestFromUrlAndBody(ctx context.Context, r *http.Request)
 	err = json.Unmarshal(bytes, updateRequest)
 	if err != nil {
 		apiErr := apierror.New(ctx, DecodebodyError, http.StatusBadRequest).
-			AppendFields(zap.String("err", err.Error()))
+			AppendFields(apifields.String("err", err.Error()))
 
 		apierror.Log(ctx, apiErr)
 		return nil, apiErr
@@ -111,7 +111,7 @@ func DecodeUserTypeFromUrlAndBody(ctx context.Context, r *http.Request) (interfa
 	bytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		apiErr := apierror.New(ctx, EmptyBodyError, http.StatusBadRequest).
-			AppendFields(zap.String("err", err.Error()))
+			AppendFields(apifields.String("err", err.Error()))
 
 		apierror.Log(ctx, apiErr)
 		return nil, apiErr
@@ -122,7 +122,7 @@ func DecodeUserTypeFromUrlAndBody(ctx context.Context, r *http.Request) (interfa
 	err = json.Unmarshal(bytes, userType)
 	if err != nil {
 		apiErr := apierror.New(ctx, DecodebodyError, http.StatusBadRequest).
-			AppendFields(zap.String("err", err.Error()))
+			AppendFields(apifields.String("err", err.Error()))
 
 		apierror.Log(ctx, apiErr)
 		return nil, apiErr

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/johnfercher/microservices/userapi/pkg/api/apierror"
+	"github.com/johnfercher/microservices/userapi/pkg/api/apifields"
 	"github.com/segmentio/kafka-go"
-	"go.uber.org/zap"
 	"net/http"
 )
 
@@ -45,7 +45,7 @@ func (self *topicPublisher) Publish(ctx context.Context, event string, message i
 	id, err := uuid.NewRandom()
 	if err != nil {
 		apiErr := apierror.New(ctx, idGenerationError, http.StatusInternalServerError).
-			AppendFields(zap.String("err", err.Error()))
+			AppendFields(apifields.String("err", err.Error()))
 
 		apierror.Log(ctx, apiErr)
 		return apiErr
@@ -54,7 +54,7 @@ func (self *topicPublisher) Publish(ctx context.Context, event string, message i
 	bytesMessage, err := json.Marshal(message)
 	if err != nil {
 		apiErr := apierror.New(ctx, cannotMarshallObjectError, http.StatusInternalServerError).
-			AppendFields(zap.String("err", err.Error()))
+			AppendFields(apifields.String("err", err.Error()))
 
 		apierror.Log(ctx, apiErr)
 		return apiErr
@@ -71,7 +71,7 @@ func (self *topicPublisher) Publish(ctx context.Context, event string, message i
 	err = self.writer.WriteMessages(ctx, msg)
 	if err != nil {
 		apiErr := apierror.New(ctx, cannotPublishMessageError, http.StatusInternalServerError).
-			AppendFields(zap.String("err", err.Error()))
+			AppendFields(apifields.String("err", err.Error()))
 
 		apierror.Log(ctx, apiErr)
 		return apiErr

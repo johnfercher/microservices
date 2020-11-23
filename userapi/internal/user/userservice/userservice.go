@@ -6,7 +6,7 @@ import (
 	"github.com/johnfercher/microservices/userapi/internal/domain/entity"
 	"github.com/johnfercher/microservices/userapi/internal/domain/repository"
 	"github.com/johnfercher/microservices/userapi/pkg/api/apierror"
-	"go.uber.org/zap"
+	"github.com/johnfercher/microservices/userapi/pkg/api/apifields"
 	"net/http"
 )
 
@@ -28,7 +28,7 @@ func (self *userService) Create(ctx context.Context, createRequest *contracts.Cr
 	user, errUserCreation := createRequest.ToUser()
 	if errUserCreation != nil {
 		apiError := apierror.New(ctx, cannotCreateUuidError, http.StatusInternalServerError).
-			AppendFields(zap.String("err", errUserCreation.Error()))
+			AppendFields(apifields.String("err", errUserCreation.Error()))
 
 		apierror.Log(ctx, apiError)
 		return nil, apiError

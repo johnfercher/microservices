@@ -5,7 +5,7 @@ import (
 	"github.com/johnfercher/microservices/userapi/internal/contracts"
 	"github.com/johnfercher/microservices/userapi/internal/domain/entity"
 	"github.com/johnfercher/microservices/userapi/pkg/api/apierror"
-	"go.uber.org/zap"
+	"github.com/johnfercher/microservices/userapi/pkg/api/apifields"
 	"gorm.io/gorm"
 	"net/http"
 	"strings"
@@ -30,7 +30,7 @@ func (self *userRepository) Create(ctx context.Context, user *entity.User) apier
 		if tx.Create(user).Error != nil {
 			apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).
 				WithMessage("It was not possible create user").
-				AppendFields(zap.String("err", tx.Error.Error()))
+				AppendFields(apifields.String("err", tx.Error.Error()))
 
 			apierror.Log(ctx, apiErr)
 			return apiErr
@@ -51,7 +51,7 @@ func (self *userRepository) AddUserType(ctx context.Context, userType *entity.Ty
 
 	if tx.Error != nil {
 		apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).
-			AppendFields(zap.String("err", tx.Error.Error()))
+			AppendFields(apifields.String("err", tx.Error.Error()))
 
 		apierror.Log(ctx, apiErr)
 		return apiErr
@@ -65,7 +65,7 @@ func (self *userRepository) RemoveUserType(ctx context.Context, userType *entity
 
 	if tx.Error != nil {
 		apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).
-			AppendFields(zap.String("err", tx.Error.Error()))
+			AppendFields(apifields.String("err", tx.Error.Error()))
 
 		apierror.Log(ctx, apiErr)
 		return apiErr
@@ -81,7 +81,7 @@ func (self *userRepository) GetById(ctx context.Context, id string) (*entity.Use
 	if tx.Error != nil {
 		apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).
 			WithMessage("Cannot load user").
-			AppendFields(zap.String("err", tx.Error.Error()))
+			AppendFields(apifields.String("err", tx.Error.Error()))
 
 		apierror.Log(ctx, apiErr)
 		return nil, apiErr
@@ -91,7 +91,7 @@ func (self *userRepository) GetById(ctx context.Context, id string) (*entity.Use
 	if err != nil {
 		apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).
 			WithMessage("Cannot load types from user").
-			AppendFields(zap.String("err", tx.Error.Error()))
+			AppendFields(apifields.String("err", tx.Error.Error()))
 
 		apierror.Log(ctx, apiErr)
 		return nil, apiErr
@@ -148,7 +148,7 @@ func (self *userRepository) Search(ctx context.Context, searchRequest *contracts
 	if tx.Error != nil {
 		apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).
 			WithMessage("Search user").
-			AppendFields(zap.String("err", tx.Error.Error()))
+			AppendFields(apifields.String("err", tx.Error.Error()))
 
 		apierror.Log(ctx, apiErr)
 		return nil, apiErr
@@ -161,7 +161,7 @@ func (self *userRepository) Search(ctx context.Context, searchRequest *contracts
 	if tx.Error != nil {
 		apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).
 			WithMessage("Search count user").
-			AppendFields(zap.String("err", tx.Error.Error()))
+			AppendFields(apifields.String("err", tx.Error.Error()))
 
 		apierror.Log(ctx, apiErr)
 		return nil, apiErr
@@ -179,7 +179,7 @@ func (self *userRepository) Update(ctx context.Context, user *entity.User) apier
 
 	if tx.Error != nil {
 		apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).
-			AppendFields(zap.String("err", tx.Error.Error()))
+			AppendFields(apifields.String("err", tx.Error.Error()))
 
 		apierror.Log(ctx, apiErr)
 		return apiErr
@@ -195,7 +195,7 @@ func (self *userRepository) Deactivate(ctx context.Context, id string) apierror.
 
 	if tx.Error != nil {
 		apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).
-			AppendFields(zap.String("err", tx.Error.Error()))
+			AppendFields(apifields.String("err", tx.Error.Error()))
 
 		apierror.Log(ctx, apiErr)
 		return apiErr
@@ -211,7 +211,7 @@ func (self *userRepository) Activate(ctx context.Context, id string) apierror.Ap
 
 	if tx.Error != nil {
 		apiErr := apierror.New(ctx, cannotExecuteQueryError, http.StatusInternalServerError).
-			AppendFields(zap.String("err", tx.Error.Error()))
+			AppendFields(apifields.String("err", tx.Error.Error()))
 
 		apierror.Log(ctx, apiErr)
 		return apiErr
